@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createFullSkin } from './replay-skin.js';
-import { RoomCameraBounds } from './replay-room.js?v=20261016-controls16';
-import { ReplayNavigation } from './replay-navigation.js?v=20261016-controls16';
+import { RoomCameraBounds } from './replay-room.js?v=20261016-clean17';
+import { ReplayNavigation } from './replay-navigation.js?v=20261016-clean17';
 
 // All assets are relative to this module; works under a GitHub Pages project subpath.
 const host = document.querySelector('#interactive-demo');
@@ -43,11 +43,11 @@ function setNavigationMode(mode, previous) {
     camera.getWorldDirection(cameraDirection);
     controls.target.copy(camera.position).addScaledVector(cameraDirection, 2.5);
   }
-  $('camera-help').textContent = mode === 'recorded'
+  $('hint').textContent = mode === 'recorded'
     ? 'The camera follows the original recording. Choose Walk or Orbit to explore freely.'
     : mode === 'orbit'
       ? 'Drag to orbit, scroll to zoom, or right-drag to pan. Click the scene to use W/A/S/D and Q/E.'
-      : 'Click the scene, then hold W/A/S/D to move and Q/E to move down/up. Drag to look around. Hold Shift to move faster.';
+      : 'Click the scene to explore · W/A/S/D to move · Drag to look · Q/E to move down/up · Shift to move faster';
   if (mode !== 'recorded') { enforceRoom(); camera.lookAt(controls.target); }
   requestDraw();
 }
@@ -127,7 +127,6 @@ function pose() {
     }
   }
   $('seek').value = seconds;
-  $('time').textContent = `${seconds.toFixed(1)} / ${data.duration.toFixed(1)} s · frame ${Math.round(seconds * data.fps)}`;
 }
 function requestDraw() { if (loaded && visible && !document.hidden && !pending) { pending = true; requestAnimationFrame(draw); } }
 function draw(now) {

@@ -7,9 +7,9 @@
 <link rel="apple-touch-icon" href="./assets/images/logo3.png">
 <meta name="description" content="GEMS combines habitual and goal-directed behavior control with keyframe-guided human–scene motion generation. Research paper, platform comparisons, and interactive demonstrations.">
 <link rel="stylesheet" href="./style.css?v=20261016-header13"><script defer src="./content.js?v=20261016-header13"></script><script defer src="./app.js?v=20261016-header13"></script>
-<link rel="stylesheet" href="./replay.css?v=20261016-controls16">
+<link rel="stylesheet" href="./replay.css?v=20261016-clean17">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
-<script type="module" src="./replay-bootstrap.js?v=20261016-controls16"></script>
+<script type="module" src="./replay-bootstrap.js?v=20261016-clean17"></script>
 </head>
 <body>
 <main>
@@ -33,12 +33,11 @@
 <section id="interactive-demo" class="wrap section replay-section">
   <h2>Explore the Long-Horizon Interaction</h2>
   <div data-replay="viewport" class="replay-viewport" tabindex="0" role="group" aria-label="Interactive 3D scene" aria-describedby="replay-hint"><button type="button" data-replay="load" disabled>Loading interactive demo…</button></div>
-  <p id="replay-hint" class="replay-hint">Click the scene to explore · W/A/S/D to move · Drag to look · Q/E to move down/up</p>
+  <p id="replay-hint" data-replay="hint" class="replay-hint">Click the scene to explore · W/A/S/D to move · Drag to look · Q/E to move down/up · Shift to move faster</p>
   <p data-replay="status" role="status" aria-live="polite"></p>
   <div data-replay="tools" class="replay-tools" hidden>
     <button type="button" data-replay="play">Play</button>
     <input data-replay="seek" type="range" min="0" max="1" value="0" aria-label="Motion timeline">
-    <output data-replay="time"></output>
     <select data-replay="segments" aria-label="Jump to action"><option value="0">Jump to action…</option></select>
   </div>
   <div data-replay="camera-tools" class="camera-tools" hidden>
@@ -47,7 +46,6 @@
       <button type="button" data-camera-mode="orbit" aria-pressed="false">Orbit</button>
       <button type="button" data-camera-mode="recorded" aria-pressed="false">Recorded</button>
     </div><button type="button" data-replay="reset">Reset view</button></div>
-    <p id="camera-help" data-replay="camera-help" class="camera-help">Click the scene, then hold W/A/S/D to move. Drag to look around. Hold Shift to move faster.</p>
     <div class="camera-movement">
       <div class="camera-pad" role="group" aria-label="Move camera">
         <button type="button" data-camera-move="forward" aria-label="Move forward (W)"><span aria-hidden="true">↑</span><kbd>W</kbd></button>
