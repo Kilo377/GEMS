@@ -44,6 +44,15 @@ export class RoomCameraBounds {
     return !position.equals(this.previousPosition) || !target.equals(this.previousTarget);
   }
 
+  // Walking keeps the viewing direction intact, including near a wall.
+  constrainWalk(position, target) {
+    this.previousPosition.copy(position);
+    this.cameraBox.clampPoint(position, position);
+    this.offset.subVectors(position, this.previousPosition);
+    target.add(this.offset);
+    return this.offset.lengthSq() > 0;
+  }
+
   home() {
     const target = this.targetBox.getCenter(new THREE.Vector3());
     const size = this.cameraBox.getSize(new THREE.Vector3());

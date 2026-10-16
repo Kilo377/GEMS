@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createFullSkin } from './replay-skin.js';
-import { RoomCameraBounds } from './replay-room.js?v=20261016-room1';
+import { RoomCameraBounds } from './replay-room.js?v=20261016-navigation14';
+import { ReplayNavigation } from './replay-navigation.js?v=20261016-navigation14';
 
 // All assets are relative to this module; works under a GitHub Pages project subpath.
 const host = document.querySelector('#interactive-demo');
@@ -13,17 +14,43 @@ const sourceTextures = new Set();
 let seconds = 0, playing = false, visible = false, pending = false, previous = 0, loaded = false;
 let width = 1, height = 1, homePosition, homeTarget, roomHomePosition, roomHomeTarget, roomBounds;
 let freeMaxDistance = 100;
+let navigation;
+const cameraDirection = new THREE.Vector3();
 const scratchA = new THREE.Matrix4(), scratchB = new THREE.Matrix4();
 const pa = new THREE.Vector3(), pb = new THREE.Vector3(), sa = new THREE.Vector3(), sb = new THREE.Vector3();
 const qa = new THREE.Quaternion(), qb = new THREE.Quaternion();
 const reflect = new THREE.Matrix4().makeScale(1, 1, -1);
 
-function roomEnabled() { return roomBounds && $('room').checked && !$('cinematic').checked; }
+function recorded() { return navigation?.mode === 'recorded'; }
+function roomEnabled() { return roomBounds && $('room').checked && !recorded(); }
 function enforceRoom() {
   if (!roomEnabled()) return;
-  if (roomBounds.constrain(camera.position, controls.target)) camera.lookAt(controls.target);
+  const changed = navigation?.mode === 'orbit'
+    ? roomBounds.constrain(camera.position, controls.target)
+    : roomBounds.constrainWalk(camera.position, controls.target);
+  if (changed) camera.lookAt(controls.target);
+}
+function translateCamera(delta) {
+  camera.position.add(delta); controls.target.add(delta);
+  // Preserve orientation when translating; only orbit gestures constrain the focus point.
+  if (roomEnabled()) roomBounds.constrainWalk(camera.position, controls.target);
+  camera.lookAt(controls.target);
 }
 function onViewChange() { enforceRoom(); requestDraw(); }
+function setNavigationMode(mode, previous) {
+  controls.enabled = mode === 'orbit';
+  if (previous === 'recorded' && mode !== 'recorded') {
+    camera.getWorldDirection(cameraDirection);
+    controls.target.copy(camera.position).addScaledVector(cameraDirection, 2.5);
+  }
+  $('camera-help').textContent = mode === 'recorded'
+    ? 'The camera follows the original recording. Choose Walk or Orbit to explore freely.'
+    : mode === 'orbit'
+      ? 'Drag to orbit, scroll to zoom, or right-drag to pan. Click the scene to use W/A/S/D and Q/E.'
+      : 'Click the scene, then hold W/A/S/D to move and Q/E to move down/up. Drag to look around. Hold Shift to move faster.';
+  if (mode !== 'recorded') { enforceRoom(); camera.lookAt(controls.target); }
+  requestDraw();
+}
 function structuralKind(node) {
   // Legacy captures have one broad cover flag. Use structural names to avoid
   // hiding furniture such as Clothcloset_with_wall or wall-mounted lamps.
@@ -31,20 +58,6 @@ function structuralKind(node) {
   if (node.roof || /^(roof|ceiling)|屋顶|天花/i.test(name)) return 'roof';
   if (node.wall || /^(wall(?:_|s$)|墙)/i.test(name)) return 'wall';
   return '';
-}
-function writeRoomFields() {
-  for (const [axis, index] of [['x', 0], ['y', 1], ['z', 2]]) {
-    host.querySelector(`[data-room="min-${axis}"]`).value = roomBounds.config.min[index];
-    host.querySelector(`[data-room="max-${axis}"]`).value = roomBounds.config.max[index];
-  }
-  host.querySelector('[data-room="margin"]').value = roomBounds.config.margin;
-}
-function describeRoom() {
-  $('room-status').textContent = $('cinematic').checked
-    ? 'Recorded camera follows the original track; room limits apply to free view only.'
-    : $('room').checked
-      ? 'Free view stays on the living-room side of the doorway. Furniture is not a collision boundary.'
-      : 'Room limits are off. Free view can move outside the room.';
 }
 function updateRoomHome() {
   const home = roomBounds.home();
@@ -102,7 +115,7 @@ function pose() {
       }
     }
   }
-  if ($('cinematic').checked) {
+  if (recorded()) {
     const offset = data.stride - 17;
     const fov = floats[a * (data.stride + 1) + 1 + offset + 16];
     if (fov > 0) {
@@ -120,22 +133,29 @@ function requestDraw() { if (loaded && visible && !document.hidden && !pending) 
 function draw(now) {
   pending = false;
   if (!loaded || !visible || document.hidden) { previous = 0; return; }
-  if (playing && previous) {
-    seconds += Math.min((now - previous) / 1000, .1);
+  const dt = previous ? Math.min((now - previous) / 1000, .1) : 0;
+  previous = now;
+  if (playing) {
+    seconds += dt;
     if (seconds >= data.duration) { seconds = data.duration; playing = false; $('play').textContent = 'Play'; }
   }
-  previous = now;
-  pose(); if (!$('cinematic').checked) { controls.update(); enforceRoom(); }
+  navigation?.update(dt);
+  pose();
+  if (!recorded()) {
+    if (navigation?.mode === 'orbit') controls.update();
+    enforceRoom();
+  }
   renderer.render(scene, camera);
-  if (playing) requestDraw(); else previous = 0;
+  if (playing || navigation?.moving) requestDraw(); else previous = 0;
 }
 function reset() {
-  $('cinematic').checked = false; controls.enabled = true;
+  navigation?.setMode('walk');
+  controls.enabled = false;
   const restricted = roomEnabled();
   controls.minDistance = 0.35; controls.maxDistance = freeMaxDistance;
   camera.position.copy(restricted ? roomHomePosition : homePosition); camera.fov = 45; camera.updateProjectionMatrix();
   controls.target.copy(restricted ? roomHomeTarget : homeTarget);
-  enforceRoom(); controls.update(); describeRoom(); requestDraw();
+  enforceRoom(); camera.lookAt(controls.target); previous = 0; requestDraw();
 }
 export async function load() {
   if (loading || loaded) return; loading = true;
@@ -153,7 +173,6 @@ export async function load() {
     floats = new Float32Array(motion);
     if (floats.length !== data.frames * (data.stride + 1)) throw new Error('Animation data is incomplete.');
     roomBounds = new RoomCameraBounds(window.GEMS.replayRoom);
-    writeRoomFields();
     scene = new THREE.Scene(); scene.background = new THREE.Color('white');
     root = new THREE.Group(); root.scale.z = -1; scene.add(root);
     scene.add(new THREE.HemisphereLight(0xffffff, 0xc1bdba, 2.2));
@@ -260,13 +279,17 @@ export async function load() {
     updateRoomHome();
     $('seek').max = data.duration; $('seek').step = 1 / data.fps;
     for (const mark of data.markers) { const option = document.createElement('option'); option.textContent = mark.name; option.value = mark.time; $('segments').append(option); }
-    $('cinematic').disabled = !data.hasCamera; $('tools').hidden = false;
-    $('room-settings').hidden = false; $('load').hidden = true;
+    $('tools').hidden = false;
+    $('camera-tools').hidden = false;
+    host.querySelector('[data-camera-mode="recorded"]').disabled = !data.hasCamera;
+    navigation = new ReplayNavigation({ camera, target: controls.target, viewport: $('viewport'), canvas: renderer.domElement,
+      panel: $('camera-tools'), translate: translateCamera, onChange: requestDraw, onModeChange: setNavigationMode });
+    $('load').hidden = true;
     $('status').textContent = data.title; loaded = true; reset(); requestDraw();
   } catch (error) { dispose(); $('status').textContent = error.message; $('load').disabled = false; } finally { loading = false; }
 }
 function dispose() {
-  loaded = false; playing = false; controls?.dispose();
+  loaded = false; playing = false; navigation?.dispose(); navigation = null; controls?.dispose();
   for (const { group } of meshes) group.traverse(o => { o.geometry?.dispose(); if (o.isSkinnedMesh) o.skeleton?.dispose(); });
   for (const m of materials) { m.userData.map?.dispose(); m.dispose(); }
   for (const texture of fullSkinTextures) texture.dispose(); fullSkinTextures.clear();
@@ -280,27 +303,9 @@ $('segments').addEventListener('change', e => { seconds = Number(e.target.value)
 $('reset').addEventListener('click', reset);
 $('walls').addEventListener('change', requestDraw);
 $('roofs').addEventListener('change', requestDraw);
-$('room').addEventListener('change', () => {
-  if (!$('cinematic').checked && $('room').checked) reset();
-  describeRoom(); requestDraw();
-});
-$('room-apply').addEventListener('click', () => {
-  const value = key => host.querySelector(`[data-room="${key}"]`).valueAsNumber;
-  try {
-    roomBounds.configure({ min: [value('min-x'), value('min-y'), value('min-z')], max: [value('max-x'), value('max-y'), value('max-z')], margin: value('margin') });
-    updateRoomHome();
-    if (!$('cinematic').checked) reset();
-    describeRoom(); requestDraw();
-  } catch (error) { $('room-status').textContent = error.message; }
-});
-$('room-defaults').addEventListener('click', () => {
-  roomBounds.configure(window.GEMS.replayRoom); writeRoomFields(); updateRoomHome();
-  if (!$('cinematic').checked) reset();
-  describeRoom(); requestDraw();
-});
-$('cinematic').addEventListener('change', e => { controls.enabled = !e.target.checked; if (!e.target.checked) reset(); describeRoom(); requestDraw(); });
+$('room').addEventListener('change', () => { enforceRoom(); requestDraw(); });
 $('gray').addEventListener('change', e => { for (const m of materials) { m.color.copy(e.target.checked ? new THREE.Color(.65, .65, .65) : m.userData.original); m.map = e.target.checked ? null : m.userData.map; m.needsUpdate = true; } requestDraw(); });
 new ResizeObserver(entries => { const r = entries[0].contentRect; width = Math.max(1, r.width); height = Math.max(1, r.height); if (renderer) { renderer.setSize(width, height); camera.aspect = width / height; camera.updateProjectionMatrix(); requestDraw(); } }).observe($('viewport'));
-new IntersectionObserver(entries => { visible = entries[0].isIntersecting; previous = 0; requestDraw(); }, { threshold: .05 }).observe(host);
+new IntersectionObserver(entries => { visible = entries[0].isIntersecting; if (!visible) navigation?.stop(); previous = 0; requestDraw(); }, { threshold: .05 }).observe(host);
 document.addEventListener('visibilitychange', () => { previous = 0; requestDraw(); });
 window.addEventListener('pagehide', dispose);

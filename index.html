@@ -7,9 +7,9 @@
 <link rel="apple-touch-icon" href="./assets/images/logo3.png">
 <meta name="description" content="GEMS combines habitual and goal-directed behavior control with keyframe-guided human–scene motion generation. Research paper, platform comparisons, and interactive demonstrations.">
 <link rel="stylesheet" href="./style.css?v=20261016-header13"><script defer src="./content.js?v=20261016-header13"></script><script defer src="./app.js?v=20261016-header13"></script>
-<link rel="stylesheet" href="./replay.css?v=20261016-room1">
+<link rel="stylesheet" href="./replay.css?v=20261016-navigation14">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
-<script type="module" src="./replay-bootstrap.js?v=20261016-autoload10"></script>
+<script type="module" src="./replay-bootstrap.js?v=20261016-navigation14"></script>
 </head>
 <body>
 <main>
@@ -32,36 +32,42 @@
 </section>
 <section id="interactive-demo" class="wrap section replay-section">
   <h2>Explore the Long-Horizon Interaction</h2>
-  <p class="replay-hint">Drag to orbit · Scroll to zoom · Right-drag to pan</p>
-  <div data-replay="viewport" class="replay-viewport"><button type="button" data-replay="load" disabled>Loading interactive demo…</button></div>
+  <p class="replay-hint">Click the scene to explore · W/A/S/D to move · Drag to look · Q/E to move down/up</p>
+  <div data-replay="viewport" class="replay-viewport" tabindex="0" role="group" aria-label="Interactive 3D scene" aria-describedby="camera-help"><button type="button" data-replay="load" disabled>Loading interactive demo…</button></div>
   <p data-replay="status" role="status" aria-live="polite"></p>
   <div data-replay="tools" class="replay-tools" hidden>
     <button type="button" data-replay="play">Play</button>
     <input data-replay="seek" type="range" min="0" max="1" value="0" aria-label="Motion timeline">
     <output data-replay="time"></output>
     <select data-replay="segments" aria-label="Jump to action"><option value="0">Jump to action…</option></select>
-    <button type="button" data-replay="reset">Reset view</button>
-    <label><input data-replay="room" type="checkbox" checked> Stay in main room</label>
-    <label><input data-replay="walls" type="checkbox" checked> Show walls</label>
-    <label><input data-replay="roofs" type="checkbox"> Show roof &amp; ceiling</label>
-    <label><input data-replay="cinematic" type="checkbox"> Recorded camera</label>
-    <label><input data-replay="gray" type="checkbox"> Neutral materials</label>
   </div>
-  <details data-replay="room-settings" class="replay-room-settings" hidden>
-    <summary>Main room limits</summary>
-    <p>The rectangle on the living-room side of the double doorway. Values use the Unity scene coordinates, in metres. Changes apply to this page session.</p>
-    <div class="replay-room-fields">
-      <label>X min <input data-room="min-x" type="number" step="0.05"></label>
-      <label>X max <input data-room="max-x" type="number" step="0.05"></label>
-      <label>Z min <input data-room="min-z" type="number" step="0.05"></label>
-      <label>Z max <input data-room="max-z" type="number" step="0.05"></label>
-      <label>Height min <input data-room="min-y" type="number" step="0.05"></label>
-      <label>Height max <input data-room="max-y" type="number" step="0.05"></label>
-      <label>Wall clearance <input data-room="margin" type="number" min="0" step="0.01"></label>
+  <div data-replay="camera-tools" class="camera-tools" hidden>
+    <div class="camera-heading"><span>Camera</span><div class="camera-modes" role="group" aria-label="Camera mode">
+      <button type="button" data-camera-mode="walk" aria-pressed="true">Walk</button>
+      <button type="button" data-camera-mode="orbit" aria-pressed="false">Orbit</button>
+      <button type="button" data-camera-mode="recorded" aria-pressed="false">Recorded</button>
+    </div><button type="button" data-replay="reset">Reset view</button></div>
+    <p id="camera-help" data-replay="camera-help" class="camera-help">Click the scene, then hold W/A/S/D to move. Drag to look around. Hold Shift to move faster.</p>
+    <div class="camera-movement">
+      <div class="camera-pad" role="group" aria-label="Move camera">
+        <button type="button" data-camera-move="forward" aria-label="Move forward (W)"><span aria-hidden="true">↑</span><kbd>W</kbd></button>
+        <button type="button" data-camera-move="left" aria-label="Move left (A)"><span aria-hidden="true">←</span><kbd>A</kbd></button>
+        <button type="button" data-camera-move="back" aria-label="Move backward (S)"><span aria-hidden="true">↓</span><kbd>S</kbd></button>
+        <button type="button" data-camera-move="right" aria-label="Move right (D)"><span aria-hidden="true">→</span><kbd>D</kbd></button>
+      </div>
+      <div class="camera-height" role="group" aria-label="Camera height"><span>Height</span><div>
+        <button type="button" data-camera-move="down" aria-label="Move down (Q)">↓ <kbd>Q</kbd></button>
+        <button type="button" data-camera-move="up" aria-label="Move up (E)">↑ <kbd>E</kbd></button>
+      </div></div>
+      <label class="camera-speed">Move speed<select data-camera="speed" aria-label="Camera move speed"><option value="0.7">Slow</option><option value="1.5" selected>Normal</option><option value="3">Fast</option></select></label>
     </div>
-    <div class="replay-room-actions"><button type="button" data-replay="room-apply">Apply limits</button><button type="button" data-replay="room-defaults">Restore room limits</button></div>
-    <p data-replay="room-status" role="status" aria-live="polite"></p>
-  </details>
+    <details class="camera-scene-options"><summary>Scene options</summary><div>
+      <label><input data-replay="room" type="checkbox" checked> Keep camera in room</label>
+      <label><input data-replay="walls" type="checkbox" checked> Show walls</label>
+      <label><input data-replay="roofs" type="checkbox"> Show roof &amp; ceiling</label>
+      <label><input data-replay="gray" type="checkbox"> Neutral materials</label>
+    </div></details>
+  </div>
 </section>
 <section id="comparisons" class="comparison-section section"><div class="comparison-wrap"><h2>Comparisons</h2>
 <div id="comparison-grid" class="comparison-grid" role="region" aria-label="Four platform video comparisons" tabindex="0"></div>
