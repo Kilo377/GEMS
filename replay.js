@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createFullSkin } from './replay-skin.js';
-import { RoomCameraBounds } from './replay-room.js?v=20261016-navigation14';
-import { ReplayNavigation } from './replay-navigation.js?v=20261016-navigation14';
+import { RoomCameraBounds } from './replay-room.js?v=20261016-controls16';
+import { ReplayNavigation } from './replay-navigation.js?v=20261016-controls16';
 
 // All assets are relative to this module; works under a GitHub Pages project subpath.
 const host = document.querySelector('#interactive-demo');
@@ -285,7 +285,7 @@ export async function load() {
     navigation = new ReplayNavigation({ camera, target: controls.target, viewport: $('viewport'), canvas: renderer.domElement,
       panel: $('camera-tools'), translate: translateCamera, onChange: requestDraw, onModeChange: setNavigationMode });
     $('load').hidden = true;
-    $('status').textContent = data.title; loaded = true; reset(); requestDraw();
+    $('status').textContent = ''; loaded = true; reset(); requestDraw();
   } catch (error) { dispose(); $('status').textContent = error.message; $('load').disabled = false; } finally { loading = false; }
 }
 function dispose() {

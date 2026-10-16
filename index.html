@@ -7,9 +7,9 @@
 <link rel="apple-touch-icon" href="./assets/images/logo3.png">
 <meta name="description" content="GEMS combines habitual and goal-directed behavior control with keyframe-guided human–scene motion generation. Research paper, platform comparisons, and interactive demonstrations.">
 <link rel="stylesheet" href="./style.css?v=20261016-header13"><script defer src="./content.js?v=20261016-header13"></script><script defer src="./app.js?v=20261016-header13"></script>
-<link rel="stylesheet" href="./replay.css?v=20261016-navigation14">
+<link rel="stylesheet" href="./replay.css?v=20261016-controls16">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
-<script type="module" src="./replay-bootstrap.js?v=20261016-navigation14"></script>
+<script type="module" src="./replay-bootstrap.js?v=20261016-controls16"></script>
 </head>
 <body>
 <main>
@@ -32,8 +32,8 @@
 </section>
 <section id="interactive-demo" class="wrap section replay-section">
   <h2>Explore the Long-Horizon Interaction</h2>
-  <p class="replay-hint">Click the scene to explore · W/A/S/D to move · Drag to look · Q/E to move down/up</p>
-  <div data-replay="viewport" class="replay-viewport" tabindex="0" role="group" aria-label="Interactive 3D scene" aria-describedby="camera-help"><button type="button" data-replay="load" disabled>Loading interactive demo…</button></div>
+  <div data-replay="viewport" class="replay-viewport" tabindex="0" role="group" aria-label="Interactive 3D scene" aria-describedby="replay-hint"><button type="button" data-replay="load" disabled>Loading interactive demo…</button></div>
+  <p id="replay-hint" class="replay-hint">Click the scene to explore · W/A/S/D to move · Drag to look · Q/E to move down/up</p>
   <p data-replay="status" role="status" aria-live="polite"></p>
   <div data-replay="tools" class="replay-tools" hidden>
     <button type="button" data-replay="play">Play</button>
@@ -55,11 +55,7 @@
         <button type="button" data-camera-move="back" aria-label="Move backward (S)"><span aria-hidden="true">↓</span><kbd>S</kbd></button>
         <button type="button" data-camera-move="right" aria-label="Move right (D)"><span aria-hidden="true">→</span><kbd>D</kbd></button>
       </div>
-      <div class="camera-height" role="group" aria-label="Camera height"><span>Height</span><div>
-        <button type="button" data-camera-move="down" aria-label="Move down (Q)">↓ <kbd>Q</kbd></button>
-        <button type="button" data-camera-move="up" aria-label="Move up (E)">↑ <kbd>E</kbd></button>
-      </div></div>
-      <label class="camera-speed">Move speed<select data-camera="speed" aria-label="Camera move speed"><option value="0.7">Slow</option><option value="1.5" selected>Normal</option><option value="3">Fast</option></select></label>
+
     </div>
     <details class="camera-scene-options"><summary>Scene options</summary><div>
       <label><input data-replay="room" type="checkbox" checked> Keep camera in room</label>

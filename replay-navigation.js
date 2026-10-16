@@ -18,7 +18,7 @@ export class ReplayNavigation {
     this.drag = null;
     this.events = new AbortController();
     const on = (element, type, handler, options = {}) => element.addEventListener(type, handler, { ...options, signal: this.events.signal });
-    this.speed = panel.querySelector('[data-camera="speed"]');
+    this.moveSpeed = 1.5;
     this.modeButtons = [...panel.querySelectorAll('[data-camera-mode]')];
     this.moveButtons = [...panel.querySelectorAll('[data-camera-move]')];
     this.viewport.tabIndex = 0;
@@ -90,7 +90,6 @@ export class ReplayNavigation {
     this.mode = mode;
     this.modeButtons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.cameraMode === mode)));
     this.moveButtons.forEach(button => { button.disabled = mode === 'recorded'; });
-    this.speed.disabled = mode === 'recorded';
     this.viewport.dataset.cameraMode = mode;
     this.onModeChange(mode, previous);
     this.onChange();
@@ -133,7 +132,7 @@ export class ReplayNavigation {
     this.delta.addScaledVector(this.right, Number(active('KeyD', 'right')) - Number(active('KeyA', 'left')));
     this.delta.y = Number(active('KeyE', 'up')) - Number(active('KeyQ', 'down'));
     const fast = this.keys.has('ShiftLeft') || this.keys.has('ShiftRight');
-    if (this.delta.lengthSq()) this.translate(this.delta.normalize().multiplyScalar(dt * Number(this.speed.value) * (fast ? 2.5 : 1)));
+    if (this.delta.lengthSq()) this.translate(this.delta.normalize().multiplyScalar(dt * this.moveSpeed * (fast ? 2.5 : 1)));
   }
 
   dispose() { this.stop(); this.events.abort(); }
