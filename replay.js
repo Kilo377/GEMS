@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createFullSkin } from './replay-skin.js';
-import { RoomCameraBounds } from './replay-room.js?v=20261016-clean17';
+import { RoomCameraBounds } from './replay-room.js?v=20261018-scene20';
 import { ReplayNavigation } from './replay-navigation.js?v=20261016-clean17';
 
 // All assets are relative to this module; works under a GitHub Pages project subpath.
@@ -12,7 +12,7 @@ let loading = false;
 const fullSkinTextures = new Set();
 const sourceTextures = new Set();
 let seconds = 0, playing = false, visible = false, pending = false, previous = 0, loaded = false;
-let width = 1, height = 1, homePosition, homeTarget, roomHomePosition, roomHomeTarget, roomBounds;
+let width = 1, height = 1, homePosition, homeTarget, sceneHomePosition, sceneHomeTarget, sceneBounds;
 let freeMaxDistance = 100;
 let navigation;
 const cameraDirection = new THREE.Vector3();
@@ -22,21 +22,21 @@ const qa = new THREE.Quaternion(), qb = new THREE.Quaternion();
 const reflect = new THREE.Matrix4().makeScale(1, 1, -1);
 
 function recorded() { return navigation?.mode === 'recorded'; }
-function roomEnabled() { return roomBounds && $('room').checked && !recorded(); }
-function enforceRoom() {
-  if (!roomEnabled()) return;
+function sceneLimitsEnabled() { return sceneBounds && $('room').checked && !recorded(); }
+function enforceSceneBounds() {
+  if (!sceneLimitsEnabled()) return;
   const changed = navigation?.mode === 'orbit'
-    ? roomBounds.constrain(camera.position, controls.target)
-    : roomBounds.constrainWalk(camera.position, controls.target);
+    ? sceneBounds.constrain(camera.position, controls.target)
+    : sceneBounds.constrainWalk(camera.position, controls.target);
   if (changed) camera.lookAt(controls.target);
 }
 function translateCamera(delta) {
   camera.position.add(delta); controls.target.add(delta);
   // Preserve orientation when translating; only orbit gestures constrain the focus point.
-  if (roomEnabled()) roomBounds.constrainWalk(camera.position, controls.target);
+  if (sceneLimitsEnabled()) sceneBounds.constrainWalk(camera.position, controls.target);
   camera.lookAt(controls.target);
 }
-function onViewChange() { enforceRoom(); requestDraw(); }
+function onViewChange() { enforceSceneBounds(); requestDraw(); }
 function setNavigationMode(mode, previous) {
   controls.enabled = mode === 'orbit';
   if (previous === 'recorded' && mode !== 'recorded') {
@@ -48,7 +48,7 @@ function setNavigationMode(mode, previous) {
     : mode === 'orbit'
       ? 'Drag to orbit, scroll to zoom, or right-drag to pan. Click the scene to use W/A/S/D and Q/E.'
       : 'Click the scene to explore · W/A/S/D to move · Drag to look · Q/E to move down/up · Shift to move faster';
-  if (mode !== 'recorded') { enforceRoom(); camera.lookAt(controls.target); }
+  if (mode !== 'recorded') { enforceSceneBounds(); camera.lookAt(controls.target); }
   requestDraw();
 }
 function structuralKind(node) {
@@ -59,19 +59,19 @@ function structuralKind(node) {
   if (node.wall || /^(wall(?:_|s$)|墙)/i.test(name)) return 'wall';
   return '';
 }
-function updateRoomHome() {
-  const home = roomBounds.home();
-  roomHomePosition = home.position; roomHomeTarget = home.target;
+function updateSceneHome() {
+  const home = sceneBounds.home();
+  sceneHomePosition = home.position; sceneHomeTarget = home.target;
   if (data.hasCamera) {
     // The first captured camera is already an interior composition in this scene.
     const offset = 1 + data.stride - 17;
     const matrix = new THREE.Matrix4().fromArray(floats, offset).premultiply(reflect).multiply(reflect);
     const position = new THREE.Vector3(), rotation = new THREE.Quaternion(), scale = new THREE.Vector3();
     matrix.decompose(position, rotation, scale);
-    if (roomBounds.cameraBox.containsPoint(position)) {
-      roomHomePosition.copy(position);
-      roomHomeTarget.copy(position).add(new THREE.Vector3(0, 0, -2.5).applyQuaternion(rotation));
-      roomBounds.constrain(roomHomePosition, roomHomeTarget);
+    if (sceneBounds.cameraBox.containsPoint(position)) {
+      sceneHomePosition.copy(position);
+      sceneHomeTarget.copy(position).add(new THREE.Vector3(0, 0, -2.5).applyQuaternion(rotation));
+      sceneBounds.constrain(sceneHomePosition, sceneHomeTarget);
     }
   }
 }
@@ -142,7 +142,7 @@ function draw(now) {
   pose();
   if (!recorded()) {
     if (navigation?.mode === 'orbit') controls.update();
-    enforceRoom();
+    enforceSceneBounds();
   }
   renderer.render(scene, camera);
   if (playing || navigation?.moving) requestDraw(); else previous = 0;
@@ -150,11 +150,11 @@ function draw(now) {
 function reset() {
   navigation?.setMode('walk');
   controls.enabled = false;
-  const restricted = roomEnabled();
+  const restricted = sceneLimitsEnabled();
   controls.minDistance = 0.35; controls.maxDistance = freeMaxDistance;
-  camera.position.copy(restricted ? roomHomePosition : homePosition); camera.fov = 45; camera.updateProjectionMatrix();
-  controls.target.copy(restricted ? roomHomeTarget : homeTarget);
-  enforceRoom(); camera.lookAt(controls.target); previous = 0; requestDraw();
+  camera.position.copy(restricted ? sceneHomePosition : homePosition); camera.fov = 45; camera.updateProjectionMatrix();
+  controls.target.copy(restricted ? sceneHomeTarget : homeTarget);
+  enforceSceneBounds(); camera.lookAt(controls.target); previous = 0; requestDraw();
 }
 export async function load() {
   if (loading || loaded) return; loading = true;
@@ -171,7 +171,6 @@ export async function load() {
     const [geometry, motion] = await Promise.all([fetchOK(new URL(data.geometry, manifestURL), 'binary'), fetchOK(new URL(data.animation, manifestURL), 'binary')]);
     floats = new Float32Array(motion);
     if (floats.length !== data.frames * (data.stride + 1)) throw new Error('Animation data is incomplete.');
-    roomBounds = new RoomCameraBounds(window.GEMS.replayRoom);
     scene = new THREE.Scene(); scene.background = new THREE.Color('white');
     root = new THREE.Group(); root.scale.z = -1; scene.add(root);
     scene.add(new THREE.HemisphereLight(0xffffff, 0xc1bdba, 2.2));
@@ -258,24 +257,30 @@ export async function load() {
       }
     }
     pose(); scene.updateMatrixWorld(true);
-    const box = new THREE.Box3(), point = new THREE.Vector3();
+    const box = new THREE.Box3(), sceneBox = new THREE.Box3(), point = new THREE.Vector3();
     for (const item of meshes) {
       if (item.node.skin) { for (const bone of item.bones) box.expandByPoint(bone.getWorldPosition(point)); }
-      else if (item.group.visible) item.group.traverse(object => {
+      else item.group.traverse(object => {
         if (!object.isMesh) return;
         const positions = object.geometry.getAttribute('position'), indices = object.geometry.index;
         // Combined meshes can contain unselected rooms: frame only vertices actually drawn by this part.
         if (!positions) throw new Error(`Missing vertex positions while framing: ${item.node.name}`);
         const count = indices ? indices.count : positions.count;
-        for (let i = 0; i < count; i++) box.expandByPoint(point.fromBufferAttribute(positions, indices ? indices.getX(i) : i).applyMatrix4(object.matrixWorld));
+        for (let i = 0; i < count; i++) {
+          point.fromBufferAttribute(positions, indices ? indices.getX(i) : i).applyMatrix4(object.matrixWorld);
+          if (item.group.visible) box.expandByPoint(point);
+          // Static geometry defines the outer scene limits, even when walls/roofs are hidden.
+          if (item.node.track < 0) sceneBox.expandByPoint(point);
+        }
       });
     }
     if (box.isEmpty()) throw new Error('No visible scene geometry in this capture.');
+    sceneBounds = RoomCameraBounds.fromSceneBox(sceneBox.isEmpty() ? box : sceneBox);
     homeTarget = box.getCenter(new THREE.Vector3());
     const radius = Math.max(2, box.getSize(new THREE.Vector3()).length() * .5);
     homePosition = homeTarget.clone().add(new THREE.Vector3(radius, radius * .75, radius));
     freeMaxDistance = radius * 8; controls.maxDistance = freeMaxDistance; camera.far = Math.max(200, radius * 20);
-    updateRoomHome();
+    updateSceneHome();
     $('seek').max = data.duration; $('seek').step = 1 / data.fps;
     for (const mark of data.markers) { const option = document.createElement('option'); option.textContent = mark.name; option.value = mark.time; $('segments').append(option); }
     $('tools').hidden = false;
@@ -302,7 +307,7 @@ $('segments').addEventListener('change', e => { seconds = Number(e.target.value)
 $('reset').addEventListener('click', reset);
 $('walls').addEventListener('change', requestDraw);
 $('roofs').addEventListener('change', requestDraw);
-$('room').addEventListener('change', () => { enforceRoom(); requestDraw(); });
+$('room').addEventListener('change', () => { enforceSceneBounds(); requestDraw(); });
 $('gray').addEventListener('change', e => { for (const m of materials) { m.color.copy(e.target.checked ? new THREE.Color(.65, .65, .65) : m.userData.original); m.map = e.target.checked ? null : m.userData.map; m.needsUpdate = true; } requestDraw(); });
 new ResizeObserver(entries => { const r = entries[0].contentRect; width = Math.max(1, r.width); height = Math.max(1, r.height); if (renderer) { renderer.setSize(width, height); camera.aspect = width / height; camera.updateProjectionMatrix(); requestDraw(); } }).observe($('viewport'));
 new IntersectionObserver(entries => { visible = entries[0].isIntersecting; if (!visible) navigation?.stop(); previous = 0; requestDraw(); }, { threshold: .05 }).observe(host);

@@ -21,7 +21,7 @@ Click the scene to focus it. Hold W/A/S/D to move, Q/E to move down/up,
 and Shift to move faster. Drag to look around in Walk mode. On-screen direction
 buttons support holding on touch screens. Orbit mode retains orbit/zoom/pan;
 Recorded mode follows the captured camera. Reset view returns to Walk mode.
-Room boundaries are applied automatically; Scene options provides a simple toggle.
+Outer scene boundaries are inferred from the exported static geometry, including hidden walls and roofs. Scene options provides a toggle to disable the guardrails.
 
 Website copy: `index.html`; links and comparison media: `content.js`; styling: `style.css`.
 The current replay is selected by `assets/replay/catalog.json`.

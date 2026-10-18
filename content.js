@@ -10,9 +10,7 @@ window.GEMS = {
     { name: 'Xiaolan Liu', affiliations: '1' }
   ],
   links: { arxiv: 'https://arxiv.org/abs/2609.22691', github: null, demo: 'https://anonymous.4open.science/r/review-video-82f4/demo.mp4' },
-  // Living/dining/kitchen rectangle on the actor's side of the double doorway.
-  // Interior wall faces, Unity world XYZ; the door partition is near X = -16.
-  replayRoom: { min: [-15.9, 0.7, -23.8], max: [-9.2, 3.5, -16.2], margin: 0.18 },
+  // Camera guardrails are inferred from the full exported scene geometry.
   media: {
     teaser: { title: 'GEMS: a continuous kitchen sequence', src: './assets/videos/movie-001.mp4', poster: './assets/images/paper-v2-dinner.png' }
   },

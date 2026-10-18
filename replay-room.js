@@ -1,9 +1,30 @@
 import * as THREE from 'three';
 
-// Configured in Unity world coordinates. The viewer reflects Z, so convert once
-// here rather than making the bounds editor expose a different coordinate system.
+// Limits are stored in Unity world coordinates; the viewer reflects Z.
+// fromSceneBox derives them from the exported geometry in viewer coordinates.
 export class RoomCameraBounds {
   constructor(config) { this.configure(config); }
+
+  static fromSceneBox(sceneBox, padding = 0.75) {
+    if (sceneBox.isEmpty() || ![...sceneBox.min.toArray(), ...sceneBox.max.toArray(), padding].every(Number.isFinite) || padding < 0) {
+      throw new Error('Cannot determine camera limits from empty or invalid scene geometry.');
+    }
+    const bounds = sceneBox.clone().expandByScalar(padding);
+    // Flat scenes still need enough height and orbit clearance to be explorable.
+    for (const axis of ['x', 'y', 'z']) {
+      if (bounds.max[axis] - bounds.min[axis] < 2) {
+        const center = (bounds.min[axis] + bounds.max[axis]) / 2;
+        bounds.min[axis] = center - 1; bounds.max[axis] = center + 1;
+      }
+    }
+    // Geometry bounds use Three.js coordinates; configure() accepts Unity coordinates.
+    return new RoomCameraBounds({
+      min: [bounds.min.x, bounds.min.y, -bounds.max.z],
+      max: [bounds.max.x, bounds.max.y, -bounds.min.z],
+      margin: 0
+    });
+  }
+
 
   configure(config) {
     const min = config.min?.map(Number), max = config.max?.map(Number);
