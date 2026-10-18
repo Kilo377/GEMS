@@ -13,9 +13,14 @@
     authors.append(name);
   });
   const resources = document.getElementById('resources');
-  for (const [key, label] of [['arxiv', 'Arxiv'], ['github', 'Github'], ['demo', 'Demo']]) {
+  for (const [key, label] of [['arxiv', 'arXiv'], ['github', 'GitHub'], ['demo', 'Demo']]) {
     const item = document.createElement(config.links[key] ? 'a' : 'span');
-    item.className = 'pill'; item.textContent = label;
+    item.className = 'pill';
+    const icon = document.createElement('img');
+    icon.src = `./assets/icons/${key}.svg`; icon.className = 'resource-icon';
+    icon.alt = ''; icon.width = 18; icon.height = 18; icon.setAttribute('aria-hidden', 'true');
+    const text = document.createElement('span'); text.textContent = label;
+    item.append(icon, text);
     if (config.links[key]) {
       item.href = config.links[key];
       item.target = '_blank'; item.rel = 'noopener noreferrer';
@@ -49,15 +54,20 @@
   function pauseAll() { operation++; videos.forEach(video => video.pause()); }
 
   ['Use the coffee machine', 'Sit down on the sofa'].forEach((action, rowIndex) => {
-    const rowTitle = document.createElement('h3');
-    rowTitle.className = 'comparison-row-title';
-    rowTitle.textContent = action;
-    grid.append(rowTitle);
+    const goal = document.createElement('div');
+    goal.className = 'comparison-goal';
+    goal.setAttribute('role', 'group'); goal.setAttribute('aria-label', `Goal ${rowIndex + 1} input`);
+    const goalLabel = document.createElement('span'); goalLabel.className = 'goal-label';
+    goalLabel.textContent = `Goal ${rowIndex + 1}`;
+    const prompt = document.createElement('span'); prompt.className = 'goal-prompt';
+    const inputLabel = document.createElement('span'); inputLabel.className = 'goal-input-label'; inputLabel.textContent = 'Input: ';
+    const instruction = document.createElement('q'); instruction.textContent = action;
+    prompt.append(inputLabel, instruction); goal.append(goalLabel, prompt); grid.append(goal);
     config.comparisonPlatforms.filter(platform => platform.clips[rowIndex]).forEach((platform, platformIndex) => {
       const clip = platform.clips[rowIndex];
       const card = document.createElement('article');
       card.className = 'comparison-card' + (platform.ours ? ' is-ours' : '');
-      const title = document.createElement('h4');
+      const title = document.createElement('h3');
       title.id = `platform-${rowIndex}-${platformIndex}`;
       title.textContent = platform.name + (platform.ours ? ' (ours)' : '');
       if (platform.venue) {
