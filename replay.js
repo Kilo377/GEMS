@@ -282,7 +282,6 @@ export async function load() {
     freeMaxDistance = radius * 8; controls.maxDistance = freeMaxDistance; camera.far = Math.max(200, radius * 20);
     updateSceneHome();
     $('seek').max = data.duration; $('seek').step = 1 / data.fps;
-    for (const mark of data.markers) { const option = document.createElement('option'); option.textContent = mark.name; option.value = mark.time; $('segments').append(option); }
     $('tools').hidden = false;
     $('camera-tools').hidden = false;
     host.querySelector('[data-camera-mode="recorded"]').disabled = !data.hasCamera;
@@ -303,7 +302,6 @@ function dispose() {
 
 $('play').addEventListener('click', () => { if (seconds >= data.duration) seconds = 0; playing = !playing; $('play').textContent = playing ? 'Pause' : 'Play'; previous = 0; requestDraw(); });
 $('seek').addEventListener('input', e => { seconds = Number(e.target.value); previous = 0; requestDraw(); });
-$('segments').addEventListener('change', e => { seconds = Number(e.target.value); previous = 0; requestDraw(); });
 $('reset').addEventListener('click', reset);
 $('walls').addEventListener('change', requestDraw);
 $('roofs').addEventListener('change', requestDraw);

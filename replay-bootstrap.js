@@ -9,7 +9,7 @@ async function loadDemo() {
   button.disabled = true;
   button.textContent = 'Loading interactive demo…';
   try {
-    replayModule ??= await import('./replay.js?v=20261018-scene20');
+    replayModule ??= await import('./replay.js?v=20261018-no-jump21');
     await replayModule.load();
   } catch (error) {
     status.textContent = `Unable to load 3D viewer: ${error.message}`;
