@@ -6,7 +6,7 @@
 <link rel="icon" type="image/png" href="./assets/images/logo3.png">
 <link rel="apple-touch-icon" href="./assets/images/logo3.png">
 <meta name="description" content="GEMS combines habitual and goal-directed behavior control with keyframe-guided human–scene motion generation. Research paper, platform comparisons, and interactive demonstrations.">
-<link rel="stylesheet" href="./style.css?v=20261018-scene20"><script defer src="./content.js?v=20261018-scene20"></script><script defer src="./app.js?v=20261018-scene20"></script>
+<link rel="stylesheet" href="./style.css?v=20261018-method22"><script defer src="./content.js?v=20261018-method22"></script><script defer src="./app.js?v=20261018-method22"></script>
 <link rel="stylesheet" href="./replay.css?v=20261016-clean17">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 <script type="module" src="./replay-bootstrap.js?v=20261018-no-jump21"></script>
@@ -88,6 +88,26 @@
 <tr class="quantitative-ours"><th scope="row">GEMS (ours)</th><td><strong>90.31</strong></td><td><strong>89.96</strong></td><td><strong>84.35</strong></td><td><strong>88.21</strong></td><td><strong>86.24</strong></td><td><strong>79.33</strong></td><td>22.48</td><td><strong>4.12</strong></td><td><strong>4.23</strong></td><td><strong>Generative</strong></td></tr>
 </tbody></table>
 </div></div></section>
+<section id="method" class="section method-section"><div class="method-wrap">
+<h2>Method</h2>
+<div class="method-tabs" role="tablist" aria-label="Method modules">
+<button type="button" role="tab" id="method-cognitive-tab" data-method-tab aria-controls="method-cognitive-panel" aria-selected="true">Cognitive module</button>
+<button type="button" role="tab" id="method-motion-tab" data-method-tab aria-controls="method-motion-panel" aria-selected="false" tabindex="-1">Motion generation module</button>
+</div>
+<div id="method-cognitive-panel" class="method-panel" role="tabpanel" aria-labelledby="method-cognitive-tab" tabindex="0">
+<figure class="method-figure">
+<a href="./assets/method/framework.pdf" target="_blank" rel="noopener noreferrer" aria-label="Open the original cognitive module figure PDF"><img src="./assets/method/framework.png" alt="GEMS cognitive module: the Habitual Controller, Goal-directed Controller and Arbiter select an action for the motion generation module." width="4408" height="1478" loading="lazy"></a>
+<figcaption><strong>Figure 2: Overall framework of the proposed GEMS.</strong> The cognitive module takes the agent’s goal and its current state as input: the Habitual Controller retrieves habitual actions based on cues triggered by the environment; the Goal-directed Controller proposes goal-directed actions and estimates the values of both habitual and goal-directed actions based on outcomes imagined by the world model; and the Arbiter selects an action based on both controller’s output, individual bias, and psychological states. The selected action is then constructed by the motion generation module.</figcaption>
+</figure>
+</div>
+<div id="method-motion-panel" class="method-panel" role="tabpanel" aria-labelledby="method-motion-tab" tabindex="0" hidden>
+<figure class="method-figure">
+<a href="./assets/method/motion_module.pdf" target="_blank" rel="noopener noreferrer" aria-label="Open the original motion generation module figure PDF"><img src="./assets/method/motion_module.png" alt="The motion generation module uses a high-level planner, keyframe generation and a Text-to-Motion model to generate human-object interactions." width="3623" height="1175" loading="lazy"></a>
+<figcaption><strong>Figure 3:</strong> The motion generation module consists of two components. Given the action description in natural language from the cognitive module and the current scene information, the high-level planner produces an executable sub-action plan; sub-actions are aligned with keyframes where needed. Using this as a condition, the low-level generator uses T2M models to generate motion sequences.</figcaption>
+</figure>
+</div>
+<noscript><p class="caption"><a href="./assets/method/motion_module.pdf">View the motion generation module figure</a>.</p></noscript>
+</div></section>
 <section id="future-work" class="wrap section"><h2>Future Work</h2>
 <p class="future-work-text">We plan to deploy GEMS at the <a href="https://www.bristol.ac.uk/bristol-digital-futures-institute/facilities/reality-emulator/" target="_blank" rel="noopener noreferrer">Reality Emulator</a> of the Bristol Digital Futures Institute (BDFI), enabling real-time interaction between users and GEMS agents in an immersive environment.</p>
 </section>

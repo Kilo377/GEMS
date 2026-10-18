@@ -29,6 +29,30 @@
     }
     resources.append(item);
   }
+  const methodTabs = [...document.querySelectorAll('[data-method-tab]')];
+  function selectMethodTab(selected) {
+    methodTabs.forEach(tab => {
+      const active = tab === selected;
+      tab.setAttribute('aria-selected', String(active));
+      tab.tabIndex = active ? 0 : -1;
+      document.getElementById(tab.getAttribute('aria-controls')).hidden = !active;
+    });
+  }
+  methodTabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => selectMethodTab(tab));
+    tab.addEventListener('keydown', event => {
+      let next;
+      if (event.key === 'ArrowRight') next = (index + 1) % methodTabs.length;
+      else if (event.key === 'ArrowLeft') next = (index - 1 + methodTabs.length) % methodTabs.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = methodTabs.length - 1;
+      else return;
+      event.preventDefault();
+      methodTabs[next].focus();
+      selectMethodTab(methodTabs[next]);
+    });
+  });
+
   function videoElement(data) {
     const video = document.createElement('video');
     video.controls = true; video.playsInline = true; video.preload = 'none';
