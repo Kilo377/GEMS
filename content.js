@@ -36,7 +36,7 @@ window.GEMS = {
     {
       name: 'ACTOR', venue: 'ICCV 2025', clips: [
         { file: 'humanise-microwave-20261016', title: 'Open microwave' },
-        { file: 'humanise-sequence-01', title: 'Refrigerator interaction' }
+        { file: 'actor-sofa-20261021', title: 'Sit down on the sofa' }
       ]
     }
   ],
